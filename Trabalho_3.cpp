@@ -297,10 +297,18 @@ double CoefDeterminacao (int num, double tabela[2][maxpontos], double Y[maxponto
 		somaY2+=(pow(tabela[1][i], 2));
 		somaY+=tabela[1][i];
 	}
-	
 	return 1-((num*somaErro2)/((num*somaY2)-(pow(somaY, 2))));
 }
-
+double CoefDeterminacao_Exponencial(int num, double tabela[2][maxpontos], double Y[maxpontos], double a, double b){
+	double soma_y_2, soma_y, soma_e_2;
+	soma_y_2 = soma_y = soma_e_2 = 0;
+	for(int j=0; j<num; j++){
+		soma_y += Y[j];
+		soma_y_2 += (pow(Y[j],2));
+		soma_e_2 += (pow(Y[j]-(a+(b*tabela[0][j])),2));
+	}
+	return 1-((num*soma_e_2)/((num*soma_y_2)-pow(soma_y,2)));
+}
 /***************************************************
 				Ajuste de Reta
 ***************************************************/
@@ -364,8 +372,23 @@ void AjustePolinomio (int num, int grau, double tabela[2][maxpontos], double A[m
 /***************************************************
 				Ajuste Exponencial 
 ***************************************************/
-void AjusteExponencial (int num, double tabela[2][maxpontos], double *c1, double *c2, double Y[maxpontos], double *cf){
-	
+void AjusteExponencial (int num, double tabela[2][maxpontos], double *c1, double *c2, double Y[maxpontos], double *cd){
+	double somatorio_lny, somatorio_x, somatorio_x_lny, somatorio_x_2;
+	double a0,a1;
+	somatorio_lny = somatorio_x = somatorio_x_lny = somatorio_x_2 = 0;
+	for(int j=0; j<num; j++)
+		Y[j] = log(tabela[1][j]); //modificacao dos valores y da tabela para ln y
+	for(int j=0; j<num; j++){
+		somatorio_x += tabela[0][j];
+		somatorio_x_2 += pow(tabela[0][j],2);
+		somatorio_x_lny += (tabela[0][j])*(Y[j]);
+		somatorio_lny += Y[j];
+	}
+	a1 = ((num * somatorio_x_lny)-(somatorio_x*somatorio_lny))/((num*somatorio_x_2)-pow(somatorio_x,2));
+	a0 = (somatorio_lny - (a1*somatorio_x))/num;
+	*c1 = pow(M_E,a0);
+	*c2 = pow(M_E,a1);
+	(*cd)=CoefDeterminacao_Exponencial(num, tabela, Y,a0,a1);
 }
 
 /***************************************************
@@ -378,7 +401,6 @@ void MostraVetor(double Y[maxpontos], int num){
 }
 //--------------------------
 int menu (){
-	
 	int x; 
 	do{
 		system("cls"); 
@@ -389,7 +411,8 @@ int menu (){
 		printf("\n\t 4 - Ajuste Polinomio"); 
 		printf("\n\t 5 - Ajuste Exponencial");
 		printf("\n\t 6 - Fechar Programa"); 
-		printf("\n\n\tOpção: "); 
+		printf("\n\n\tOpção: ");
+		fflush(stdin);
 		scanf("%d",&x); 
 	}while(x < 1 || x > 6); 
 	
@@ -446,7 +469,7 @@ int main(){
 
 	setlocale(LC_ALL,"Portuguese");
 	int op, pontos, grau;
-	double tabela[2][maxpontos], x, Px, a0, a1, Y[maxpontos], cd, A[maxgrau];
+	double tabela[2][maxpontos], x, Px, a0, a1, Y[maxpontos], cd, A[maxgrau],a,b;
 	
 	do{
 		op = menu(); 
@@ -500,9 +523,13 @@ int main(){
 			case 5: 	//AJUSTE EXPONENCIAL
 				system("cls"); 
 				printf("\n\tAjuste Exponencial");
-				
-				// cálculos
-				
+				ColetaDados(&pontos, tabela, &x, &grau, 3);
+				AjusteExponencial(pontos,tabela,&a,&b,Y,&cd);
+				printf("\n\ta = %lf \n\tb = %lf", a, b);
+				printf("\n\tVetor Y ajustado:\n");
+				MostraVetor(Y, pontos);
+				printf("\n\tCoeficiente de determinacao = %lf\n\t", cd);
+				system("pause");
 				printf("\n\t");
 				system("pause");
 			
