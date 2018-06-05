@@ -12,6 +12,7 @@ Leonardo Silva de Oliveira			RA: 171025903
 #include <ctype.h>
 #include <stdlib.h>
 #include <locale.h>
+#include<limits.h>
 
 #define maxpontos 15
 #define maxgrau 10
@@ -219,6 +220,7 @@ void MostraMatriz(int linhas, int colunas, double matriz[maxpontos][maxpontos]){
 //------------------
 double Newton(int num, double tabela[2][maxpontos], double ponto){
 	double x_x0=1, Px=0, mdd[maxpontos][maxpontos]; //mdd = Matriz de Diferencas Divididas
+	ZeraMatriz(mdd, num+1);
 	for(int i=0; i<2; i++){ //transpoe a tabela para a mdd
 		for(int j=0; j<num; j++){
 			mdd[j][i]=tabela[i][j];
@@ -232,7 +234,7 @@ double Newton(int num, double tabela[2][maxpontos], double ponto){
 			//system("pause");
 		}
 	}
-	//MostraMatriz(num, num+1, mdd); //Mostra a tabela de diferencas difididas
+	MostraMatriz(num, num+1, mdd); //Mostra a tabela de diferencas difididas
 	
 	//Calculo do valor
 	for(int i=0; i<num; i++){
@@ -255,6 +257,7 @@ double Newton(int num, double tabela[2][maxpontos], double ponto){
 double NewtonGregory (int num, double tabela[2][maxpontos], double ponto){
 	unsigned long int fat=1;
 	double h, x_x0=1, Px=0, mdf[maxpontos][maxpontos]; //mdf = Matriz de Diferencas Divididas
+	ZeraMatriz(mdf, num+1);
 	for(int i=0; i<2; i++){ //transpoe a tabela para a mdf
 		for(int j=0; j<num; j++){
 			mdf[j][i]=tabela[i][j];
@@ -269,7 +272,7 @@ double NewtonGregory (int num, double tabela[2][maxpontos], double ponto){
 			//system("pause");
 		}
 	}
-	//MostraMatriz(num, num+1, mdf); //Mostra a tabela de diferencas difididas
+	MostraMatriz(num, num+1, mdf); //Mostra a tabela de diferencas difididas
 	
 	//Calculo do valor
 	for(int i=0; i<num; i++){
@@ -297,18 +300,11 @@ double CoefDeterminacao (int num, double tabela[2][maxpontos], double Y[maxponto
 		somaY2+=(pow(tabela[1][i], 2));
 		somaY+=tabela[1][i];
 	}
+	//printf("\nerro2 = %lf \ny2 = %lf\ny = %lf", somaErro2, somaY2, somaY);
+	//system("pause");
 	return 1-((num*somaErro2)/((num*somaY2)-(pow(somaY, 2))));
 }
-double CoefDeterminacao_Exponencial(int num, double tabela[2][maxpontos], double Y[maxpontos], double a, double b){
-	double soma_y_2, soma_y, soma_e_2;
-	soma_y_2 = soma_y = soma_e_2 = 0;
-	for(int j=0; j<num; j++){
-		soma_y += Y[j];
-		soma_y_2 += (pow(Y[j],2));
-		soma_e_2 += (pow(Y[j]-(a+(b*tabela[0][j])),2));
-	}
-	return 1-((num*soma_e_2)/((num*soma_y_2)-pow(soma_y,2)));
-}
+
 /***************************************************
 				Ajuste de Reta
 ***************************************************/
@@ -372,23 +368,27 @@ void AjustePolinomio (int num, int grau, double tabela[2][maxpontos], double A[m
 /***************************************************
 				Ajuste Exponencial 
 ***************************************************/
-void AjusteExponencial (int num, double tabela[2][maxpontos], double *c1, double *c2, double Y[maxpontos], double *cd){
-	double somatorio_lny, somatorio_x, somatorio_x_lny, somatorio_x_2;
-	double a0,a1;
-	somatorio_lny = somatorio_x = somatorio_x_lny = somatorio_x_2 = 0;
-	for(int j=0; j<num; j++)
-		Y[j] = log(tabela[1][j]); //modificacao dos valores y da tabela para ln y
+void AjusteExponencial (int num, double tabela[2][maxpontos], double *a, double *b, double Y[maxpontos], double *cd){
+	double somaX=0, somalnY=0, somaX2=0, somaXlnY=0, a1, a0;
 	for(int j=0; j<num; j++){
-		somatorio_x += tabela[0][j];
-		somatorio_x_2 += pow(tabela[0][j],2);
-		somatorio_x_lny += (tabela[0][j])*(Y[j]);
-		somatorio_lny += Y[j];
+		tabela[1][j]=log(tabela[1][j]);
 	}
-	a1 = ((num * somatorio_x_lny)-(somatorio_x*somatorio_lny))/((num*somatorio_x_2)-pow(somatorio_x,2));
-	a0 = (somatorio_lny - (a1*somatorio_x))/num;
-	*c1 = pow(M_E,a0);
-	*c2 = pow(M_E,a1);
-	(*cd)=CoefDeterminacao_Exponencial(num, tabela, Y,a0,a1);
+	for(int j=0; j<num; j++){
+		somaX+=tabela[0][j];
+		somalnY+=tabela[1][j];
+		somaXlnY+=(tabela[0][j]*(tabela[1][j]));
+		somaX2+=(pow(tabela[0][j], 2));
+	}
+	
+	a1=((num*somaXlnY)-(somaX*somalnY))/((num*somaX2)-(pow(somaX, 2)));
+	a0=(somalnY-a1*somaX)/num;
+	(*a)=exp(a0);
+	(*b)=exp(a1);
+	
+	for(int i=0; i<num; i++){
+		Y[i]=(a0+a1*tabela[0][i]);
+	}
+	(*cd)=CoefDeterminacao(num, tabela, Y);
 }
 
 /***************************************************
@@ -401,6 +401,7 @@ void MostraVetor(double Y[maxpontos], int num){
 }
 //--------------------------
 int menu (){
+	
 	int x; 
 	do{
 		system("cls"); 
@@ -411,8 +412,7 @@ int menu (){
 		printf("\n\t 4 - Ajuste Polinomio"); 
 		printf("\n\t 5 - Ajuste Exponencial");
 		printf("\n\t 6 - Fechar Programa"); 
-		printf("\n\n\tOpção: ");
-		fflush(stdin);
+		printf("\n\n\tOpção: "); 
 		scanf("%d",&x); 
 	}while(x < 1 || x > 6); 
 	
@@ -420,6 +420,7 @@ int menu (){
 }
 //--------------------------------------------------
 int ColetaDados(int *pontos, double matriz[2][maxpontos], double *x, int *grau, int opcao){
+	double maior=LONG_MIN, menor=LONG_MAX;
 	system("cls");
 	if(opcao>=1){ // coleta numero de pontos e os pontos tabelados
 		printf("\n\tDigite o número de pontos:");
@@ -430,6 +431,12 @@ int ColetaDados(int *pontos, double matriz[2][maxpontos], double *x, int *grau, 
 				if(i==0){ //valores de x
 					printf("\tx%d = ", j);
 					scanf("%lf", &matriz[i][j]);
+					if(matriz[i][j]>maior){
+						maior=matriz[i][j];
+					}
+					if(matriz[i][j]<menor){
+						menor=matriz[i][j];
+					}
 				}
 				else{ //valores de Y
 					printf("\ty%d = ", j);
@@ -438,8 +445,8 @@ int ColetaDados(int *pontos, double matriz[2][maxpontos], double *x, int *grau, 
 			}
 			if(i==0){
 				if(opcao==2){ //verificacao de pontos igualmente espacados para newton gregory
-					for(int i=1; i<(*pontos)-1; i++){
-						if((matriz[0][i]-matriz[0][i-1])!=matriz[0][i+1]-matriz[0][i]){
+					for(int i=1; i<(*pontos)-2; i++){
+						if((matriz[0][i]-matriz[0][i-1])!=(matriz[0][i+1]-matriz[0][i])){
 							return 0;
 						}
 					}
@@ -447,15 +454,15 @@ int ColetaDados(int *pontos, double matriz[2][maxpontos], double *x, int *grau, 
 				printf("\n\tValores de Y:\n");
 			}
 		}
-		if(opcao==1){// para newton e newton gregory
+		if(opcao<=2){// para newton e newton gregory
 			printf("\n\tEm qual ponto deseja calcular a funcao?");
 			printf("\n\tx = ");
 			do{
 				scanf("%lf", &*x);
-				if((*x)<matriz[0][0] || (*x)>matriz[0][(*pontos)-1]){
-					printf("\n\tO ponto deve ser maior que %lf e menor que %lf", matriz[0][0], matriz[0][(*pontos)-1]);
+				if((*x)<menor || (*x)>maior){
+					printf("\n\tO ponto deve ser maior que %lf e menor que %lf\n\tRedigite: ", menor, maior);
 				}
-			}while((*x)<matriz[0][0] || (*x)>matriz[0][(*pontos)-1]);
+			}while((*x)<menor || (*x)>maior);
 		}
 		if(opcao==4){ //coleda grau para ajuste polinomial
 			printf("\n\tDigite o grau do polinômio: ");
@@ -469,7 +476,7 @@ int main(){
 
 	setlocale(LC_ALL,"Portuguese");
 	int op, pontos, grau;
-	double tabela[2][maxpontos], x, Px, a0, a1, Y[maxpontos], cd, A[maxgrau],a,b;
+	double tabela[2][maxpontos], x, Px, a0, a1, Y[maxpontos], cd, A[maxgrau];
 	
 	do{
 		op = menu(); 
@@ -524,13 +531,11 @@ int main(){
 				system("cls"); 
 				printf("\n\tAjuste Exponencial");
 				ColetaDados(&pontos, tabela, &x, &grau, 3);
-				AjusteExponencial(pontos,tabela,&a,&b,Y,&cd);
-				printf("\n\ta = %lf \n\tb = %lf", a, b);
+				AjusteExponencial(pontos, tabela, &a0, &a1, Y, &cd);
+				printf("\n\ta = %lf \n\tb = %lf", a0, a1);
 				printf("\n\tVetor Y ajustado:\n");
 				MostraVetor(Y, pontos);
-				printf("\n\tCoeficiente de determinacao = %lf\n\t", cd);
-				system("pause");
-				printf("\n\t");
+				printf("\n\tCoeficiente de determinacao = %lf\n", cd);
 				system("pause");
 			
 				break; 
