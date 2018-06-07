@@ -510,7 +510,7 @@ int main(){
 				printf("\n\ta0 = %lf \n\ta1 = %lf", a0, a1);
 				printf("\n\tVetor Y ajustado:\n");
 				MostraVetor(Y, pontos);
-				printf("\n\tCoeficiente de determinacao = %lf\n", cd);
+				printf("\n\tCoeficiente de determinacao = %lf\n\t", cd);
 				system("pause");
 			
 				break; 
@@ -523,7 +523,7 @@ int main(){
 				MostraVetor(A, grau+1);
 				printf("\n\tVetor Ajustado:\n");
 				MostraVetor(Y, pontos);
-				printf("\n\tCoeficiente de determinacao = %lf\n", cd);
+				printf("\n\tCoeficiente de determinacao = %lf\n\t", cd);
 				system("pause");
 			
 				break; 
@@ -535,7 +535,7 @@ int main(){
 				printf("\n\ta = %lf \n\tb = %lf", a0, a1);
 				printf("\n\tVetor Y ajustado:\n");
 				MostraVetor(Y, pontos);
-				printf("\n\tCoeficiente de determinacao = %lf\n", cd);
+				printf("\n\tCoeficiente de determinacao = %lf\n\t", cd);
 				system("pause");
 			
 				break; 
